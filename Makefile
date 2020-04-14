@@ -11,4 +11,4 @@ tidy :
 	rm *.o
 
 clean :
-	rm *.o twerver
+	rm *.o server
