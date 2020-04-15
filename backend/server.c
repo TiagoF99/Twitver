@@ -563,6 +563,7 @@ int main (int argc, char **argv) {
                         int inbuf = 0; // How many bytes currently in buffer?
                         while (strncmp(buf, "username:", 9) != 0) {
                             read_input(cur_fd, &inbuf, buf);
+                            fprintf(stderr, "%s\n", buf);
                             buf[0] = '\0';
 
                         }
