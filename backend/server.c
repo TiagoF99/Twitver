@@ -561,10 +561,16 @@ int main (int argc, char **argv) {
                         // Receive messages
                         char buf[BUF_SIZE] = {'\0'};
                         int inbuf = 0; // How many bytes currently in buffer?
-                        read_input(cur_fd, &inbuf, buf);
+                        while (strncmp(buf, "username:", 9) != 0) {
+                            read_input(cur_fd, &inbuf, buf);
+                            buf[0] = '\0';
+
+                        }
 
                         int invalid = 1;
-                        
+
+                        char *ptr = strchr(buf, ':');
+                        char *new = ptr + 1;
                         // check if username is empty string
                         if (inbuf <= 0 || (strcmp(buf, "\0") == 0)) {
 
@@ -575,25 +581,25 @@ int main (int argc, char **argv) {
 
                         }  else {
 
-                            fprintf(stderr, "[%d] Found Newline: %s\n", p->fd, buf);
+                            fprintf(stderr, "[%d] Found Newline: %s\n", p->fd, new);
                             
                             // check that it doesnt equal other peoples usernames
                             struct client *copy = active_clients;
-                            int check = check_user_ne(copy, buf, cur_fd, &new_clients);
+                            int check = check_user_ne(copy, new, cur_fd, &new_clients);
 
                             if (check) { // if its a valid username
 
                                 //remove from new and add to active
-                                strcpy(new_clients->username, buf);
+                                strcpy(new_clients->username, new);
                                 struct client *copy = new_clients->next;
                                 new_clients->next=active_clients;
                                 active_clients=new_clients;
                                 new_clients=copy;
-                                fprintf(stderr, "%s has just joined.\n", buf);
+                                fprintf(stderr, "%s has just joined.\n", new);
 
                                 // notify all active users of your addition.
                                 char user_welcome[BUF_SIZE];
-                                strcpy(user_welcome, buf);
+                                strcpy(user_welcome, new);
                                 strcat(user_welcome, " has just joined.\r\n");
 
                                 struct client *ac;
