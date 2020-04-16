@@ -21,7 +21,7 @@
 #define MSGLIM_REACHED "You have reached your message limit. You cant send anymore.\r\n"
 #define FOLLOWLIM_REACHED "You or the person you are trying to follow have reached your following limits. Follow unsuccesful.\r\n"
 #define QUIT_MESSAGE "quit"
-#define WELCOME_MSG "Welcome to Twitver! Enter your username: "
+#define WELCOME_MSG "Welcome to CSC209 Twitter! Enter your username: "
 #define SEND_MSG "send"
 #define SHOW_MSG "show"
 #define FOLLOW_MSG "follow"
@@ -43,17 +43,17 @@ struct client {
 };
 
 
-// Provided functions.
+// Provided functions. 
 void add_client(struct client **clients, int fd, struct in_addr addr, int initial);
 void remove_client(struct client **clients, int fd);
 
 
 // The set of socket descriptors for select to monitor.
 // This is a global variable because we need to remove socket descriptors
-// from allset when a write to a socket fails.
+// from allset when a write to a socket fails. 
 fd_set allset;
 
-/*
+/* 
  * Create a new client, initialize it, and add it to the head of the linked
  * list.
  */
@@ -87,7 +87,7 @@ void add_client(struct client **clients, int fd, struct in_addr addr, int initia
     *clients = p;
 }
 
-/*
+/* 
  * Remove client from the linked list and close its socket.
  * Also, remove socket descriptor from allset.
  */
@@ -265,7 +265,7 @@ void follow(char *buf, struct client **active_clients, struct client **q, int cu
     }
 
     char *username_to_follow = ptr + 1;
-
+    
     struct client *copy = *active_clients;
     struct client *p = *q;
 
@@ -397,7 +397,7 @@ cur_fd sends message buf to all of his followers and stores input.
 void send_mess(char *buf, int cur_fd, struct client **q, struct client **act) {
     struct client *p = *q;
     struct client *active_clients = *act;
-
+    
     char *ptr = strchr(buf, ' ');
     if (!ptr || (strcmp(ptr+1, "\0") == 0)) {
          if (write(cur_fd, INVALID_INPUT, strlen(INVALID_INPUT)) == -1) {
@@ -436,7 +436,7 @@ void send_mess(char *buf, int cur_fd, struct client **q, struct client **act) {
                     }
                 }
                 copy_act=copy_act->next;
-            }
+            }   
         }
 
         // set message in your message array
@@ -464,7 +464,7 @@ void read_input(int cur_fd, int *inbuf, char *buf) {
     char *after = buf;       // Pointer to position after the data in buf
     int nbytes;
     while ((nbytes = read(cur_fd, after, room)) > 0) {
-        fprintf(stderr, "[%d] Read %d bytes\n", cur_fd, nbytes);
+        fprintf(stderr, "[%d] Read %d bytes\n", cur_fd, nbytes);    
         *inbuf += nbytes;
 
         int where;
@@ -486,7 +486,7 @@ int main (int argc, char **argv) {
 
     // If the server writes to a socket that has been closed, the SIGPIPE
     // signal is sent and the process is terminated. To prevent the server
-    // from terminating, ignore the SIGPIPE signal.
+    // from terminating, ignore the SIGPIPE signal. 
     struct sigaction sa;
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = 0;
@@ -495,26 +495,26 @@ int main (int argc, char **argv) {
         perror("sigaction");
         exit(1);
     }
-    // A list of active clients (who have already entered their names).
+    // A list of active clients (who have already entered their names). 
     struct client *active_clients = NULL;
 
     // A list of clients who have not yet entered their names. This list is
     // kept separate from the list of active clients, because until a client
-    // has entered their name, they should not issue commands or
-    // or receive announcements.
+    // has entered their name, they should not issue commands or 
+    // or receive announcements. 
     struct client *new_clients = NULL;
     struct sockaddr_in *server = init_server_addr(PORT);
     int listenfd = set_up_server_socket(server, LISTEN_SIZE);
     free(server);
     // Initialize allset and add listenfd to the set of file descriptors
-    // passed into select
+    // passed into select 
     FD_ZERO(&allset);
     FD_SET(listenfd, &allset);
 
     // maxfd identifies how far into the set to search
     maxfd = listenfd;
     while (1) {
-
+        
         // make a copy of the set before we pass it into select
         rset = allset;
         nready = select(maxfd + 1, &rset, NULL, NULL, NULL);
@@ -540,13 +540,13 @@ int main (int argc, char **argv) {
             if (write(clientfd, greeting, strlen(greeting)) == -1) {
                 remove_client(&new_clients, clientfd);
             }
-        }
+        } 
         // Check which other socket descriptors have something ready to read.
         // The reason we iterate over the rset descriptors at the top level and
         // search through the two lists of clients each time is that it is
         // possible that a client will be removed in the middle of one of the
         // operations. This is also why we call break after handling the input.
-        // If a client has been removed, the loop variables may no longer be
+        // If a client has been removed, the loop variables may no longer be 
         // valid.
 
         int cur_fd, handled;
@@ -557,15 +557,23 @@ int main (int argc, char **argv) {
                 // Check if any new clients are entering their names
                 for (p = new_clients; p != NULL; p = p->next) {
                     if (cur_fd == p->fd) {
-
+                        
                         // Receive messages
                         char buf[BUF_SIZE] = {'\0'};
                         int inbuf = 0; // How many bytes currently in buffer?
-                        read_input(cur_fd, &inbuf, buf);
+                        while (strncmp(buf, "username:", 9) != 0) {
+                            read_input(cur_fd, &inbuf, buf);
+                            if (strcmp(buf, "\0") != 0) {
+                                fprintf(stderr, "%s\n", buf);
+                            }
+                            buf[0] = '\0';
 
+                        }
 
                         int invalid = 1;
 
+                        char *ptr = strchr(buf, ':');
+                        char *new = ptr + 1;
                         // check if username is empty string
                         if (inbuf <= 0 || (strcmp(buf, "\0") == 0)) {
 
@@ -576,35 +584,35 @@ int main (int argc, char **argv) {
 
                         }  else {
 
-                            fprintf(stderr, "[%d] Found Newline: %s\n", p->fd, buf);
-
+                            fprintf(stderr, "[%d] Found Newline: %s\n", p->fd, new);
+                            
                             // check that it doesnt equal other peoples usernames
                             struct client *copy = active_clients;
-                            int check = check_user_ne(copy, buf, cur_fd, &new_clients);
+                            int check = check_user_ne(copy, new, cur_fd, &new_clients);
 
                             if (check) { // if its a valid username
 
                                 //remove from new and add to active
-                                strcpy(new_clients->username, buf);
+                                strcpy(new_clients->username, new);
                                 struct client *copy = new_clients->next;
                                 new_clients->next=active_clients;
                                 active_clients=new_clients;
                                 new_clients=copy;
-                                fprintf(stderr, "%s has just joined.\n", buf);
+                                fprintf(stderr, "%s has just joined.\n", new);
 
                                 // notify all active users of your addition.
                                 char user_welcome[BUF_SIZE];
-                                strcpy(user_welcome, buf);
+                                strcpy(user_welcome, new);
                                 strcat(user_welcome, " has just joined.\r\n");
 
                                 struct client *ac;
                                 for (ac = active_clients; ac != NULL; ac = ac->next) {
                                     if (write(ac->fd, user_welcome, strlen(user_welcome)) == -1) {
                                         remove_client(&active_clients, ac->fd);
-                                    }
+                                    }                           
                                 }
                                 invalid = 0;
-                            }
+                            } 
                         }
 
                         // not a valid username so we resend the welcome message
@@ -636,7 +644,7 @@ int main (int argc, char **argv) {
                                 fprintf(stderr, "[%d] Read 0 bytes\n", p->fd);
                                 remove_client(&active_clients, cur_fd);
                             }
-
+                            
                             // execute instructions depending on user input
                             if (strcmp(buf, SHOW_MSG) == 0) {
 
@@ -667,7 +675,7 @@ int main (int argc, char **argv) {
                                     fprintf(stderr, "%s", INVALID_INPUT);
                                 }
                             }
-
+                           
                             break;
                         }
                     }
