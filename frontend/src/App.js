@@ -1,31 +1,29 @@
 import React, { Component } from 'react';
 import './App.css';
-import { w3cwebsocket as W3CWebSocket } from "websocket";
 
-const client = new W3CWebSocket('ws://127.0.0.1:55248');
-client.onopen = function() {
-    console.log('WebSocket Client Connected');
- 
-    function sendName() {
-        if (client.readyState === client.OPEN) {
-            var name = "username:tiago";
-            client.send(name);
-            setTimeout(sendName, 1000);
-        }
-    }
-    sendName();
-};
-client.onmessage = (message) => {
-  console.log(message);
-};
 
 class App extends Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {message: "before"};
+      }
 
 
-  componentDidMount() {
-      console.log("beginning connection...");
-      client.onopen();
+    componentDidMount() {
+        console.log("starting...")
+        fetch('/test', {
+            method: 'get',
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'Content-Type': 'application/json'
+            }}).then(response => {
+                return response.json();
+            }).then(text => {
+                console.log(text);
+                console.log(text["message"]);
+                this.setState({message: text["message"]});
+            });
     }
 
 
@@ -44,6 +42,7 @@ class App extends Component {
           >
             Learn React
           </a>
+          <p> message: {this.state.message} </p>
         </header>
       </div>
     );

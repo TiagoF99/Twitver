@@ -1,23 +1,29 @@
-var WebSocketClient = require('websocket').client;
+const io = require('socket.io-client');
+var socket = io.connect('http://localhost:55248');
 
-var client = new WebSocketClient();
+// second attempt at implementation
+class Ws {
+  get newClientPromise() {
+    return new Promise((resolve, reject) => {
+      let wsClient = new WebSocket("ws://localhost:55248/");
+      console.log(wsClient)
+      wsClient.onopen = () => {
+        console.log("connected");
+        resolve(wsClient);
+      };
+      wsClient.onerror = error => reject(error);
+    })
+  }
+  get clientPromise() {
+    if (!this.promise) {
+      this.promise = this.newClientPromise
+    }
+    return this.promise;
+  }
+}
 
-client.on('connectFailed', function(error) {
-    console.log('Connect Error: ' + error.toString());
-});
 
-client.on('connect', function(connection) {
-    console.log('WebSocket Client Connected');
-    connection.on('error', function(error) {
-        console.log("Connection Error: " + error.toString());
-    });
-    connection.on('close', function() {
-        console.log("connection closed");
-    });
-    connection.on('message', function(message) {
-        console.log(message);
-    });
-
-});
-
-client.connect('http://localhost:55248');
+ window.wsSingleton = new Ws();
+      window.wsSingleton.clientPromise
+      .then( wsClient =>{wsClient.send('username:tiago'); console.log('sended')})
+      .catch( error => alert(error) );

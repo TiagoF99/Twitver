@@ -1,16 +1,25 @@
-#!/usr/bin/env python
-
-""" client.py - Echo client for sending/receiving C-like structs via socket
-References:
-- Ctypes fundamental data types: https://docs.python.org/2/library/ctypes.html#ctypes-fundamental-data-types-2
-- Ctypes structures: https://docs.python.org/2/library/ctypes.html#structures-and-unions
-- Sockets: https://docs.python.org/2/howto/sockets.html
-"""
-
+from flask import Flask, jsonify, request, render_template
 import socket
 import sys
-import random
 from ctypes import *
+
+app = Flask(__name__)
+
+@app.route('/test', methods=['GET', 'POST'])
+def add():
+
+    # POST request
+    if request.method == 'POST':
+        nums = request.get_json()
+        # must return a string value and note nums is a dict of strings
+        print(nums)
+        return "hello"
+
+    # GET request
+    else:
+        message = {"message": main()}
+        print(message)
+        return jsonify(message)  # serialize and use JSON headers
 
 
 """ This class defines a C-like struct """
@@ -34,7 +43,7 @@ def main():
         sys.exit(1)
 
     try:
-        while True:
+        # while True:
             # print("")
             # payload_out = Payload(1, i, random.uniform(-10, 30))
             # print("Sending id=%d, counter=%d, temp=%f" % (payload_out.id,
@@ -45,27 +54,24 @@ def main():
             # all data has been sent or an error occurs. No return value.
             # print("Sent %d bytes" % nsent)
 
-            print(3)
 
-            buff = s.recv(256)
-            # payload_in = Payload.from_buffer_copy(buff)
+        buff = s.recv(256)
+        # payload_in = Payload.from_buffer_copy(buff)
 
-            print(4)
-            server_output = str(buff).replace('\'b\'', '').strip('b')
-            # print("Received id=%d, counter=%d, temp=%f" % (payload_in.id,
-            #                                             payload_in.counter,
-            #                                             payload_in.temp))
+        server_output = str(buff).replace('\'b\'', '').strip('b').replace("\'", "")
+        # print("Received id=%d, counter=%d, temp=%f" % (payload_in.id,
+        #                                             payload_in.counter,
+        #                                             payload_in.temp))
+        return server_output
 
-            print(1)
-            s.sendall(bytes(input(server_output), 'utf-8'))
-            # Alternative: s.sendall(...): coontinues to send data until either
-            # all data has been sent or an error occurs. No return value.
-            # print("Sent %d bytes" % nsent)
-            print(2)
+        #s.sendall(bytes(input(server_output), 'utf-8'))
+        # Alternative: s.sendall(...): coontinues to send data until either
+        # all data has been sent or an error occurs. No return value.
+        # print("Sent %d bytes" % nsent)
+
     finally:
         print("Closing socket")
         s.close()
 
-
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, port=5000)
