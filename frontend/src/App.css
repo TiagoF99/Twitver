@@ -36,3 +36,11 @@
     transform: rotate(360deg);
   }
 }
+
+#twitter_image {
+  width: 40%;
+}
+
+#title {
+  font-size: 200%;
+}
