@@ -10,6 +10,7 @@ C
 Python
 - Flask
 React
+BootStrap (HTML/CSS)
 NodeJS
 Fetch API
 ```
